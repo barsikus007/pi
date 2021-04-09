@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
 
+
 def callback(*arg):
     print(arg)
+
 
 def createPath( img ):
     h, w = img.shape[:2]
     return np.zeros((h, w, 3), np.uint8)
 
-cv2.namedWindow( "result" )
+
+cv2.namedWindow("result")
 
 cap = cv2.VideoCapture(0)
-hsv_min = np.array((39, 102, 51), np.uint8)
+# hsv_min = np.array((39, 102, 51), np.uint8)
+hsv_min = np.array((50, 180, 0), np.uint8)
 hsv_max = np.array((179, 255, 255), np.uint8)
 
 x = 0
