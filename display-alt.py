@@ -226,9 +226,10 @@ class PCD8544(SPIDevice):
 BORDER = 5
 FONTSIZE = 10
 
-display = PCD8544(din=10, sclk=11, dc=6, rst=5, cs=8)
-bl = PWMLED(13)
-bl.value = True
+display = PCD8544(din=10, sclk=11, dc=12, rst=24, cs=8)
+# display = PCD8544(din=10, sclk=11, dc=6, rst=5, cs=8)
+# bl = PWMLED(13)
+# bl.value = True
 
 
 def make_image(text):

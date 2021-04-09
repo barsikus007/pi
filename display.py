@@ -24,9 +24,11 @@ BORDER = 5
 FONTSIZE = 10
 
 spi = busio.SPI(board.SCK, MOSI=board.MOSI)
-dc = digitalio.DigitalInOut(board.D6)  # data/command
+# dc = digitalio.DigitalInOut(board.D6)  # data/command
+dc = digitalio.DigitalInOut(board.D12)  # data/command
 cs = digitalio.DigitalInOut(board.CE0)  # Chip select
-reset = digitalio.DigitalInOut(board.D5)  # reset
+# reset = digitalio.DigitalInOut(board.D5)  # reset
+reset = digitalio.DigitalInOut(board.D24)  # reset
 
 display = adafruit_pcd8544.PCD8544(spi, dc, cs, reset)
 
@@ -35,9 +37,9 @@ display.bias = 4
 display.contrast = 60
 
 # Turn on the Backlight LED
-backlight = digitalio.DigitalInOut(board.D13)  # backlight
-backlight.switch_to_output()
-backlight.value = True
+# backlight = digitalio.DigitalInOut(board.D13)  # backlight
+# backlight.switch_to_output()
+# backlight.value = True
 
 # Clear display.
 display.fill(0)
