@@ -2,8 +2,7 @@ import cv2
 import numpy as np
 
 
-def nothing(*arg):
-    pass
+photo_mode = True
 
 
 def gradientHSV(h_min, h_max, w=200):
@@ -26,21 +25,25 @@ if __name__ == '__main__':
     cv2.namedWindow("settings", cv2.WINDOW_NORMAL)  # создаем окно настроек
     cv2.resizeWindow("settings", 500, 500)
 
-    cap = cv2.VideoCapture(0)
+    if not photo_mode:
+        cap = cv2.VideoCapture(0)
 
     # создаем 6 бегунков для настройки начального и конечного цвета фильтра
-    cv2.createTrackbar('h1', 'settings', 0, 179, nothing)
-    cv2.createTrackbar('s1', 'settings', 0, 255, nothing)
-    cv2.createTrackbar('v1', 'settings', 0, 255, nothing)
-    cv2.createTrackbar('h2', 'settings', 179, 179, nothing)
-    cv2.createTrackbar('s2', 'settings', 255, 255, nothing)
-    cv2.createTrackbar('v2', 'settings', 255, 255, nothing)
+    cv2.createTrackbar('h1', 'settings', 0, 179, lambda x: None)
+    cv2.createTrackbar('s1', 'settings', 0, 255, lambda x: None)
+    cv2.createTrackbar('v1', 'settings', 0, 255, lambda x: None)
+    cv2.createTrackbar('h2', 'settings', 179, 179, lambda x: None)
+    cv2.createTrackbar('s2', 'settings', 255, 255, lambda x: None)
+    cv2.createTrackbar('v2', 'settings', 255, 255, lambda x: None)
     # P.S: чтобы поместить диапазон значений Hue (от 0 до 360) в рамки целевого формата (8 бит),
     #      OpenCV делит данный диапазон на 2. Следовательно Hue в OpenCV работает в диапазоне 0 до 179
 
     while True:
-        # flag, img = cap.read()
-        img = cv2.imread('lab.png')
+        if photo_mode:
+            img = cv2.imread('lab-alt.jpg')
+            # img = cv2.imread('lab.png')
+        else:
+            flag, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # считываем значения бегунков

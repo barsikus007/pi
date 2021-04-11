@@ -11,13 +11,15 @@ from display import show
 
 
 # path = '/home/pi/Desktop/pycharm/lab.png'
-path = 'lab.png'
-frame = cv2.imread(path)
-if frame is None:
-    exit(f'Could not read the image.\n{path}')
+# path = 'opencv_tests/lab.png'
+# frame = cv2.imread(path)
+# if frame is None:
+#     exit(f'Could not read the image.\n{path}')
 
 
 def scan():
+    cap = cv2.VideoCapture(0)
+    flag, frame = cap.read()
     rects = []
     result = []
     hsv_colors = [50, 180, 0]

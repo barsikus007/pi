@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
 
-
-def callback(*arg):
-    print(arg)
+photo_mode = True
 
 
 def createPath( img ):
@@ -13,7 +11,6 @@ def createPath( img ):
 
 cv2.namedWindow("result")
 
-cap = cv2.VideoCapture(0)
 # hsv_min = np.array((39, 102, 51), np.uint8)
 hsv_min = np.array((50, 180, 0), np.uint8)
 hsv_max = np.array((179, 255, 255), np.uint8)
@@ -24,11 +21,18 @@ lastx = 0
 lasty = 0
 path_color = (0, 0, 255)
 
-flag, img = cap.read()
-path = createPath(img)
+if photo_mode:
+    img = cv2.imread('lab-alt.jpg')
+    path = createPath(img)
+else:
+    cap = cv2.VideoCapture(0)
+    flag, img = cap.read()
+    path = createPath(img)
+
 
 while True:
-    flag, img = cap.read()
+    if not photo_mode:
+        flag, img = cap.read()
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV )
     thresh = cv2.inRange(hsv, hsv_min, hsv_max)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 import os
 import sys
 import math
@@ -7,7 +7,7 @@ import time
 import pygame
 from gpiozero import *
 
-# from laboratory import scan
+from laboratory import scan
 
 
 def joy_to_motor_polar(joy_x, joy_y):
@@ -75,7 +75,7 @@ def joy_to_motor(joy_x, joy_y):
     return left, right
 
 
-def calculate_diff(left, right, nom_left, nom_right, diff=0.1):
+def calculate_diff(left, right, nom_left, nom_right, diff=0.01):
     if abs(left - nom_left) > diff:
         direction = left - nom_left > 0
         left += diff*(direction-1) + diff*direction
@@ -94,12 +94,16 @@ def calculate_diff(left, right, nom_left, nom_right, diff=0.1):
 
 
 def joystick_loop(j, ):
-    robot = Robot((5, 6), (17, 27))
+    robot = Robot((5, 6), (4, 27))
+    fork = Motor(18, 23)
+    lift = Motor(20, 21)
     try:
         axes = {}
         d_pad = '(0, 0) '
         buttons = []
         acceleration_mode = False
+        stick_mode = False
+        d_pad_x, d_pad_y = 0, 0
         nom_left, nom_right = 0, 0
         while True:
             events = pygame.event.get()
@@ -112,6 +116,8 @@ def joystick_loop(j, ):
                         acceleration_mode = not acceleration_mode
                     elif event.button == 2:
                         pass  # doors_open()
+                    elif event.button == 3:
+                        stick_mode = not stick_mode
                 elif event.type == pygame.JOYBUTTONUP:
                     try:
                         buttons.remove(str(event.button))
@@ -119,9 +125,9 @@ def joystick_loop(j, ):
                         pass
                 elif event.type == pygame.JOYAXISMOTION:
                     if abs(event.value) > 0.1:
-                        axes[event.axis] = f'{event.value:+.1f}'
+                        axes[event.axis] = f'{event.value:+.2f}'
                     else:
-                        axes[event.axis] = f'{0.0:+.1f}'
+                        axes[event.axis] = f'{0.0:+.2f}'
                 elif event.type == pygame.MOUSEMOTION:
                     pass  # print(event.rel, event.buttons)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -130,13 +136,15 @@ def joystick_loop(j, ):
                     pass
                 elif event.type == pygame.JOYHATMOTION:
                     d_pad = f'{event.value} '
+                    d_pad_x, d_pad_y = event.value
                 else:
-                    pass  # print(event)
+                    print(event)
                 buttons.sort(key=lambda x: int(x))
                 ax = list(axes.items())
                 ax.sort(key=lambda x: x[0])
                 right, left = float(axes.get(1, '+0.0')), float(axes.get(4, '+0.0'))
-                # left, right = joy_to_motor(float(axes.get(0, '+0.0')), float(axes.get(1, '+0.0')))
+                if stick_mode:
+                    left, right = joy_to_motor_best(float(axes.get(0, '+0.0')), float(axes.get(1, '+0.0')))
                 if acceleration_mode:
                     left, right, nom_left, nom_right = calculate_diff(left, right, nom_left, nom_right, diff=0.1)
                 print(
@@ -144,6 +152,8 @@ def joystick_loop(j, ):
                     end=f'     ({left}, {right})'
                 )
                 robot.value = (left, right)
+                lift.value = d_pad_x
+                fork.value = d_pad_y
 
     except KeyboardInterrupt:
         print("\rEXITING NOW")
@@ -153,19 +163,29 @@ def joystick_loop(j, ):
 def main():
     mac = '90:89:5F:07:35:43'
     try:
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        pygame.init()
-        pygame.display.set_mode([0, 0])
+        os.putenv('DISPLAY', ':0.0')
+        pygame.display.init()
+        pygame.display.set_mode((1, 1))
+        pygame.joystick.init()
         j = pygame.joystick.Joystick(0)
         j.init()
+        print('Initialized!')
+        joystick_loop(j)
     except pygame.error as e:
-        print(e)
-        print('Connecting...')
-        os.system(fr"/bin/echo -e 'connect {mac} \n' | bluetoothctl")
-        # os.system(f'chmod +x {sys.argv[0]}')
-        time.sleep(5)
-        os.execv(sys.executable, ['python3'] + sys.argv)
-    joystick_loop(j)
+        try:
+            from traceback import format_exc
+            print(e)
+            print(type(e))
+            print(format_exc())
+            print('Connecting...')
+            os.system(fr"/bin/echo -e 'connect {mac} \n' | bluetoothctl")
+            # os.system(f'chmod +x {sys.argv[0]}')
+            time.sleep(5)
+            os.execv(sys.executable, ['python3'] + sys.argv)
+        except Exception as e:
+            print(e, type(e))
+    except Exception as e:
+        print(e, type(e))
 
 
 if __name__ == '__main__':
