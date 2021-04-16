@@ -5,7 +5,7 @@ import math
 import time
 
 import pygame
-from gpiozero import *
+from gpiozero import Motor, Robot
 
 from laboratory import scan, show
 
@@ -112,65 +112,75 @@ def joystick_loop(j, ):
         d_pad_x, d_pad_y = 0, 0
         nom_left, nom_right = 0, 0
         while True:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.JOYBUTTONDOWN:
-                    buttons.append(str(event.button))
-                    if event.button == 0:
-                        pass  # scan()
-                    elif event.button == 1:
-                        acceleration_mode = not acceleration_mode
-                    elif event.button == 2:
-                        forward = not forward
-                    elif event.button == 3:
-                        stick_mode = not stick_mode
-                    elif event.button == 11:
-                        labb[lab_id] += 1
-                    elif event.button == 12:
-                        lab_id += 1
-                    elif event.button == 4:
-                        print(labb)
-                        show(' '.join([str(_) for _ in labb]))
-                    elif event.button == 5:
-                        labb = [0, 0, 0, 0, 0]
-                elif event.type == pygame.JOYBUTTONUP:
-                    try:
-                        buttons.remove(str(event.button))
-                    except ValueError:
+            try:
+                events = pygame.event.get()
+                for event in events:
+                    if event.type == pygame.JOYBUTTONDOWN:
+                        buttons.append(str(event.button))
+                        if event.button == 0:
+                            pass  # scan()
+                        elif event.button == 1:
+                            acceleration_mode = not acceleration_mode
+                        elif event.button == 2:
+                            try:
+                                scan()
+                                try:
+                                    buttons.remove(str(event.button))
+                                except ValueError:
+                                    pass
+                            except Exception as e:
+                                print(f'\r{e}')
+                        elif event.button == 3:
+                            stick_mode = not stick_mode
+                        elif event.button == 11:
+                            labb[lab_id] += 1
+                        elif event.button == 12:
+                            lab_id += 1
+                        elif event.button == 4:
+                            print(labb)
+                            show(' '.join([str(_) for _ in labb]))
+                        elif event.button == 5:
+                            labb = [0, 0, 0, 0, 0]
+                    elif event.type == pygame.JOYBUTTONUP:
+                        try:
+                            buttons.remove(str(event.button))
+                        except ValueError:
+                            pass
+                    elif event.type == pygame.JOYAXISMOTION:
+                        if abs(event.value) > 0.1:
+                            axes[event.axis] = f'{event.value:+.4f}'
+                        else:
+                            axes[event.axis] = f'{0.0:+.4f}'
+                    elif event.type == pygame.MOUSEMOTION:
+                        pass  # print(event.rel, event.buttons)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
                         pass
-                elif event.type == pygame.JOYAXISMOTION:
-                    if abs(event.value) > 0.1:
-                        axes[event.axis] = f'{event.value:+.4f}'
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        pass
+                    elif event.type == pygame.JOYHATMOTION:
+                        d_pad = f'{event.value} '
+                        d_pad_x, d_pad_y = event.value
                     else:
-                        axes[event.axis] = f'{0.0:+.4f}'
-                elif event.type == pygame.MOUSEMOTION:
-                    pass  # print(event.rel, event.buttons)
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    pass
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    pass
-                elif event.type == pygame.JOYHATMOTION:
-                    d_pad = f'{event.value} '
-                    d_pad_x, d_pad_y = event.value
-                else:
-                    print(event)
-                buttons.sort(key=lambda x: int(x))
-                ax = list(axes.items())
-                ax.sort(key=lambda x: x[0])
-                left, right = -float(axes.get(1, '+0.0')), -float(axes.get(4, '+0.0'))
-                if stick_mode:
-                    left, right = joy_to_motor_best(-float(axes.get(0, '+0.0')), -float(axes.get(1, '+0.0')))
-                if acceleration_mode:
-                    left, right, nom_left, nom_right = calculate_diff(left, right, nom_left, nom_right, diff=0.005)
-                if forward:
-                    left, right = 0.1, 0.1
-                print(
-                    '\rButtons: ' + d_pad + ' '.join(buttons) + ' Axes: ' + '; '.join([f'{k}: {v}' for k, v in ax]),
-                    end=f'     ({left}, {right})'
-                )
-                robot.value = (left, right)
-                lift.value = d_pad_x
-                fork.value = d_pad_y
+                        print(event)
+                    buttons.sort(key=lambda x: int(x))
+                    ax = list(axes.items())
+                    ax.sort(key=lambda x: x[0])
+                    left, right = -float(axes.get(1, '+0.0')), -float(axes.get(4, '+0.0'))
+                    if stick_mode:
+                        left, right = joy_to_motor_best(-float(axes.get(0, '+0.0')), -float(axes.get(1, '+0.0')))
+                    if acceleration_mode:
+                        left, right, nom_left, nom_right = calculate_diff(left, right, nom_left, nom_right, diff=0.005)
+                    if forward:
+                        left, right = 0.1, 0.1
+                    print(
+                        '\rButtons: ' + d_pad + ' '.join(buttons) + ' Axes: ' + '; '.join([f'{k}: {v}' for k, v in ax]),
+                        end=f'     ({left}, {right})'
+                    )
+                    robot.value = (left, right)
+                    lift.value = d_pad_y
+                    fork.value = d_pad_x
+            except Exception as e:
+                print(f'\r{e}')
 
     except KeyboardInterrupt:
         print("\rEXITING NOW")

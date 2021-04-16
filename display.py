@@ -51,6 +51,9 @@ time.sleep(1)
 # Make sure to create image with mode '1' for 1-bit color.
 def make_image(text):
     text = str(text)
+    len_ = len(text.split())
+    if len_ != 5:
+        text += ' err'
     image = Image.new("1", (display.width, display.height))
 
     # Get drawing object to draw on image.
@@ -81,6 +84,7 @@ def make_image(text):
 
 
 def show(text):
+    print(f'\n{text}')
     # Display image
     display.fill(0)
     display.show()
