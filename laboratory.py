@@ -10,8 +10,8 @@ import numpy as np
 from display import show
 
 
-# path = '/home/pi/Desktop/pycharm/lab.png'
-# path = 'opencv_tests/lab.png'
+# path = '/home/pi/Desktop/pycharm/lab-latest-1.jpg'
+# path = 'opencv_tests/lab-latest-1.jpg'
 # frame = cv2.imread(path)
 # if frame is None:
 #     exit(f'Could not read the image.\n{path}')
@@ -43,7 +43,7 @@ def scan():
                         thickness=1, lineType=cv2.LINE_AA)
             cv2.rectangle(zeros, (x, y), (x + w, y + h), (155, 155, 0), 1)
     img = zeros
-    # img = cv2.drawContours(zeros, contours, -1, (0, 255, 0), 3)
+    # frame = cv2.drawContours(zeros, contours, -1, (0, 255, 0), 3)
     rects.sort(key=lambda _: _[2])
     for num, (w, h, x) in enumerate(rects):
         # print(num, (w, h))

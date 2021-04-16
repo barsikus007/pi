@@ -8,6 +8,8 @@ def main_video():
     show_fps = 0
     temp_time = int(time.time())
     cap = cv2.VideoCapture(0)
+    cap.set(3, 960)
+    cap.set(4, 540)
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -36,7 +38,7 @@ def main_video():
 
 if __name__ == '__main__':
     main_video()
-    # main_photo('lab.png')
+    # main_photo('lab-latest-1.jpg')
 """sudo apt install libgtk-3-dev libcanberra-gtk3-dev -y
 sudo apt install libtiff-dev zlib1g-dev -y
 sudo apt install libjpeg-dev libpng-dev -y

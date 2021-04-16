@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 
 
-photo_mode = True
+photo_mode = False
+print(cv2.getBuildInformation())
 
 
 def gradientHSV(h_min, h_max, w=200):
@@ -27,21 +28,27 @@ if __name__ == '__main__':
 
     if not photo_mode:
         cap = cv2.VideoCapture(0)
+        cap.set(3, 960)
+        cap.set(4, 540)
 
     # создаем 6 бегунков для настройки начального и конечного цвета фильтра
-    cv2.createTrackbar('h1', 'settings', 0, 179, lambda x: None)
-    cv2.createTrackbar('s1', 'settings', 0, 255, lambda x: None)
-    cv2.createTrackbar('v1', 'settings', 0, 255, lambda x: None)
-    cv2.createTrackbar('h2', 'settings', 179, 179, lambda x: None)
-    cv2.createTrackbar('s2', 'settings', 255, 255, lambda x: None)
+    cv2.createTrackbar('h1', 'settings', 60, 179, lambda x: None)
+    cv2.createTrackbar('s1', 'settings', 70, 255, lambda x: None)
+    cv2.createTrackbar('v1', 'settings', 20, 255, lambda x: None)
+    cv2.createTrackbar('h2', 'settings', 89, 179, lambda x: None)
+    # cv2.createTrackbar('h2', 'settings', 179, 179, lambda x: None)
+    cv2.createTrackbar('s2', 'settings', 145, 255, lambda x: None)
+    # cv2.createTrackbar('s2', 'settings', 255, 255, lambda x: None)
     cv2.createTrackbar('v2', 'settings', 255, 255, lambda x: None)
+    # cv2.createTrackbar('v2', 'settings', 255, 255, lambda x: None)
     # P.S: чтобы поместить диапазон значений Hue (от 0 до 360) в рамки целевого формата (8 бит),
     #      OpenCV делит данный диапазон на 2. Следовательно Hue в OpenCV работает в диапазоне 0 до 179
 
     while True:
         if photo_mode:
-            img = cv2.imread('lab-alt.jpg')
-            # img = cv2.imread('lab.png')
+            img = cv2.imread('lab-latest-2.jpg')
+            img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+            # frame = cv2.imread('lab.png')
         else:
             flag, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -66,7 +73,7 @@ if __name__ == '__main__':
         gradient = cv2.cvtColor(gradient, cv2.COLOR_HSV2BGR)
 
         # выводим результат на экран
-        cv2.imshow('img', img)
+        cv2.imshow('frame', img)
         cv2.imshow('result', thresh)
         cv2.imshow('settings', gradient)
 

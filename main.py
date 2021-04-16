@@ -7,10 +7,10 @@ import time
 import pygame
 from gpiozero import *
 
-from laboratory import scan
+from laboratory import scan, show
 
 
-def joy_to_motor_polar(joy_x, joy_y):
+def joy_to_motor_bad(joy_x, joy_y):
     joy_y = -joy_y
     # convert to polar coordinates
     theta = math.atan2(joy_y, joy_x)
@@ -38,7 +38,7 @@ def joy_to_motor_polar(joy_x, joy_y):
     return -left, -right
 
 
-def joy_to_motor_best(joy_x, joy_y):
+def joy_to_motor(joy_x, joy_y):
     left = joy_x * math.sqrt(2.0) / 2.0 + joy_y * math.sqrt(2.0) / 2.0
     right = -joy_x * math.sqrt(2.0) / 2.0 + joy_y * math.sqrt(2.0) / 2.0
     # Invert III and IV zones of xy plot
@@ -53,7 +53,7 @@ def joy_to_motor_best(joy_x, joy_y):
     return left, right
 
 
-def joy_to_motor(joy_x, joy_y):
+def joy_to_motor_best(joy_x, joy_y):
     # Get X and Y from the Joystick, do whatever scaling and calibrating you need to do based on your hardware.
     # Invert X
     joy_y = -joy_y
@@ -72,16 +72,18 @@ def joy_to_motor(joy_x, joy_y):
         right = 1.0
     elif right < -1:
         right = -1.0
-    return left, right
+    return -left, -right
 
 
 def calculate_diff(left, right, nom_left, nom_right, diff=0.01):
     if abs(left - nom_left) > diff:
         direction = left - nom_left > 0
-        left += diff*(direction-1) + diff*direction
+        nom_left += diff*(direction-1) + diff*direction
+        left = nom_left
     if abs(right - nom_right) > diff:
         direction = right - nom_right > 0
-        right += diff*(direction-1) + diff*direction
+        nom_right += diff*(direction-1) + diff*direction
+        right = nom_right
     if left > 1:
         left = 1.0
     elif left < -1:
@@ -94,15 +96,19 @@ def calculate_diff(left, right, nom_left, nom_right, diff=0.01):
 
 
 def joystick_loop(j, ):
-    robot = Robot((5, 6), (4, 27))
-    fork = Motor(18, 23)
+    robot = Robot((27, 4), (6, 5))
+    fork = Motor(15, 23)
     lift = Motor(20, 21)
+    print('Pin OK')
     try:
+        lab_id = 0
+        labb = [0, 0, 0, 0, 0]
         axes = {}
         d_pad = '(0, 0) '
         buttons = []
         acceleration_mode = False
         stick_mode = False
+        forward = False
         d_pad_x, d_pad_y = 0, 0
         nom_left, nom_right = 0, 0
         while True:
@@ -115,9 +121,18 @@ def joystick_loop(j, ):
                     elif event.button == 1:
                         acceleration_mode = not acceleration_mode
                     elif event.button == 2:
-                        pass  # doors_open()
+                        forward = not forward
                     elif event.button == 3:
                         stick_mode = not stick_mode
+                    elif event.button == 11:
+                        labb[lab_id] += 1
+                    elif event.button == 12:
+                        lab_id += 1
+                    elif event.button == 4:
+                        print(labb)
+                        show(' '.join([str(_) for _ in labb]))
+                    elif event.button == 5:
+                        labb = [0, 0, 0, 0, 0]
                 elif event.type == pygame.JOYBUTTONUP:
                     try:
                         buttons.remove(str(event.button))
@@ -125,9 +140,9 @@ def joystick_loop(j, ):
                         pass
                 elif event.type == pygame.JOYAXISMOTION:
                     if abs(event.value) > 0.1:
-                        axes[event.axis] = f'{event.value:+.2f}'
+                        axes[event.axis] = f'{event.value:+.4f}'
                     else:
-                        axes[event.axis] = f'{0.0:+.2f}'
+                        axes[event.axis] = f'{0.0:+.4f}'
                 elif event.type == pygame.MOUSEMOTION:
                     pass  # print(event.rel, event.buttons)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -142,11 +157,13 @@ def joystick_loop(j, ):
                 buttons.sort(key=lambda x: int(x))
                 ax = list(axes.items())
                 ax.sort(key=lambda x: x[0])
-                right, left = float(axes.get(1, '+0.0')), float(axes.get(4, '+0.0'))
+                left, right = -float(axes.get(1, '+0.0')), -float(axes.get(4, '+0.0'))
                 if stick_mode:
-                    left, right = joy_to_motor_best(float(axes.get(0, '+0.0')), float(axes.get(1, '+0.0')))
+                    left, right = joy_to_motor_best(-float(axes.get(0, '+0.0')), -float(axes.get(1, '+0.0')))
                 if acceleration_mode:
-                    left, right, nom_left, nom_right = calculate_diff(left, right, nom_left, nom_right, diff=0.1)
+                    left, right, nom_left, nom_right = calculate_diff(left, right, nom_left, nom_right, diff=0.005)
+                if forward:
+                    left, right = 0.1, 0.1
                 print(
                     '\rButtons: ' + d_pad + ' '.join(buttons) + ' Axes: ' + '; '.join([f'{k}: {v}' for k, v in ax]),
                     end=f'     ({left}, {right})'
