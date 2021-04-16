@@ -19,15 +19,19 @@ from display import show
 
 def scan():
     cap = cv2.VideoCapture(0)
+    cap.set(3, 960)
+    cap.set(4, 540)
     flag, frame = cap.read()
     rects = []
     result = []
-    hsv_colors = [50, 180, 0]
+    # hsv_colors = (50, 180, 0)
+    hsv_colors = (60, 70, 20)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     zeros = np.zeros(hsv.shape)
 
     h_min = np.array(hsv_colors, np.uint8)
-    h_max = np.array([180, 255, 200], np.uint8)
+    # h_max = np.array((180, 255, 200), np.uint8)
+    h_max = np.array((89, 145, 255), np.uint8)
 
     mask = cv2.inRange(hsv, h_min, h_max)
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -49,16 +53,22 @@ def scan():
         # print(num, (w, h))
         # print(w)
         # print(h)
-        if h > 300:
-            typ = 3
-        elif h > 200:
-            typ = 2
-        elif h > 100:
-            typ = 1
+        if 15 < w < 70:
+            if h > 300:
+                typ = 3
+            elif h > 150:
+                typ = 2
+            elif h > 70:
+                typ = 1
+            else:
+                typ = -1
+            if typ > 0:
+                result.append(str(typ))
         else:
             typ = -1
-        if typ > 0:
-            result.append(str(typ))
+        if len(result) > 5:
+            pass
+    print(' '.join(result))
     while False:
         cv2.imshow('result', img)
         ch = cv2.waitKey(5)
@@ -68,7 +78,6 @@ def scan():
 
 
 def _show(text):
-    print(text)
     show(text)
 
 
