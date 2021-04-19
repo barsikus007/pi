@@ -7,7 +7,7 @@ import time
 import pygame
 from gpiozero import Motor, Robot
 
-from laboratory import scan, show
+from laboratory import scan
 
 
 def joy_to_motor_bad(joy_x, joy_y):
@@ -54,6 +54,7 @@ def joy_to_motor(joy_x, joy_y):
 
 
 def joy_to_motor_best(joy_x, joy_y):
+    """Joystick single stick map converter"""
     # Get X and Y from the Joystick, do whatever scaling and calibrating you need to do based on your hardware.
     # Invert X
     joy_y = -joy_y
@@ -76,6 +77,7 @@ def joy_to_motor_best(joy_x, joy_y):
 
 
 def calculate_diff(left, right, nom_left, nom_right, diff=0.01):
+    """Soft acceleration mode calculator"""
     if abs(left - nom_left) > diff:
         direction = left - nom_left > 0
         nom_left += diff*(direction-1) + diff*direction
@@ -99,10 +101,8 @@ def joystick_loop(j, ):
     robot = Robot((27, 4), (6, 5))
     fork = Motor(15, 23)
     lift = Motor(20, 21)
-    print('Pin OK')
+    print('Pins OK')
     try:
-        lab_id = 0
-        labb = [0, 0, 0, 0, 0]
         axes = {}
         d_pad = '(0, 0) '
         buttons = []
@@ -117,12 +117,12 @@ def joystick_loop(j, ):
                 for event in events:
                     if event.type == pygame.JOYBUTTONDOWN:
                         buttons.append(str(event.button))
-                        if event.button == 0:
-                            pass  # scan()
-                        elif event.button == 1:
+                        if event.button == 1:
+                            # switch soft acceleration mode
                             acceleration_mode = not acceleration_mode
                         elif event.button == 2:
                             try:
+                                # blocking scan function
                                 scan()
                                 try:
                                     buttons.remove(str(event.button))
@@ -131,16 +131,8 @@ def joystick_loop(j, ):
                             except Exception as e:
                                 print(f'\r{e}')
                         elif event.button == 3:
+                            # switch control map
                             stick_mode = not stick_mode
-                        elif event.button == 11:
-                            labb[lab_id] += 1
-                        elif event.button == 12:
-                            lab_id += 1
-                        elif event.button == 4:
-                            print(labb)
-                            show(' '.join([str(_) for _ in labb]))
-                        elif event.button == 5:
-                            labb = [0, 0, 0, 0, 0]
                     elif event.type == pygame.JOYBUTTONUP:
                         try:
                             buttons.remove(str(event.button))
@@ -162,6 +154,8 @@ def joystick_loop(j, ):
                         d_pad_x, d_pad_y = event.value
                     else:
                         print(event)
+
+                    # logging and writing to motors
                     buttons.sort(key=lambda x: int(x))
                     ax = list(axes.items())
                     ax.sort(key=lambda x: x[0])
@@ -177,8 +171,9 @@ def joystick_loop(j, ):
                         end=f'     ({left}, {right})'
                     )
                     robot.value = (left, right)
-                    lift.value = d_pad_y
-                    fork.value = d_pad_x
+                    lift.value = -d_pad_y
+                    fork.value = -d_pad_x
+
             except Exception as e:
                 print(f'\r{e}')
 
@@ -188,6 +183,7 @@ def joystick_loop(j, ):
 
 
 def main():
+    # MAC address of gamepad
     mac = '90:89:5F:07:35:43'
     try:
         os.putenv('DISPLAY', ':0.0')
@@ -199,6 +195,7 @@ def main():
         print('Initialized!')
         joystick_loop(j)
     except pygame.error as e:
+        # Kludge to connect to DualShock
         try:
             from traceback import format_exc
             print(e)

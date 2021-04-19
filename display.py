@@ -24,6 +24,8 @@ BORDER = 5
 FONTSIZE = 10
 
 spi = busio.SPI(board.SCK, MOSI=board.MOSI)
+# Check pinout.xyz
+# D6 = GPIO6
 # dc = digitalio.DigitalInOut(board.D6)  # data/command
 dc = digitalio.DigitalInOut(board.D12)  # data/command
 cs = digitalio.DigitalInOut(board.CE0)  # Chip select
@@ -85,14 +87,14 @@ def make_image(text):
 
 def show(text):
     print(f'\n{text}')
-    # Display image
+    # reset display
     display.fill(0)
     display.show()
     time.sleep(1)
+    # print text on display
     image = make_image(text)
     display.image(image)
     display.show()
-    # make blocking
 
 
 if __name__ == '__main__':
